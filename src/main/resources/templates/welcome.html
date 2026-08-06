@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org"
+  th:replace="~{fragments/layout :: layout (~{::body},'home')}">
+
+  <body>
+    <style>
+      /* 1. Global Theme Overrides - Dark Slate Palette */
+      body, html {
+        background: #0f172a !important;
+        color: #f8fafc !important;
+        margin: 0;
+        padding: 0;
+      }
+
+      .container-fluid, .container {
+        max-width: 100% !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+      }
+
+      /* 2. Dynamic Image Slideshow Container */
+      .hero-slideshow-container {
+        position: relative;
+        width: 100%;
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        background: #1e293b;
+        margin-top: 1rem;
+        min-height: 480px;
+      }
+
+      /* Slideshow Background Layers */
+      .slideshow-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-size: cover;
+        background-position: center;
+        filter: brightness(0.40);
+        z-index: 1;
+        opacity: 0;
+        animation: crossfade 16s infinite;
+      }
+
+      .slide-1 {
+        background-image: url('https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=1600&q=80');
+        animation-delay: 0s;
+      }
+
+      .slide-2 {
+        background-image: url('https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=1600&q=80');
+        animation-delay: 4s;
+      }
+
+      .slide-3 {
+        background-image: url('https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=1600&q=80');
+        animation-delay: 8s;
+      }
+
+      .slide-4 {
+        background-image: url('https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?auto=format&fit=crop&w=1600&q=80');
+        animation-delay: 12s;
+      }
+
+      @keyframes crossfade {
+        0% { opacity: 0; transform: scale(1); }
+        6% { opacity: 1; }
+        25% { opacity: 1; }
+        31% { opacity: 0; transform: scale(1.05); }
+        100% { opacity: 0; }
+      }
+
+      .hero-content {
+        position: relative;
+        z-index: 2;
+        padding: 5rem 3rem;
+      }
+
+      /* 3. Glassmorphism Panels */
+      .glass-panel {
+        background: rgba(30, 41, 59, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .glass-panel:hover {
+        transform: translateY(-4px);
+        border-color: #38bdf8;
+        box-shadow: 0 12px 30px rgba(56, 189, 248, 0.15);
+      }
+
+      .metric-card {
+        background: rgba(30, 41, 59, 0.9);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+      }
+
+      .gradient-text {
+        background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      /* Native Weather Display Styling */
+      .weather-badge {
+        background: rgba(56, 189, 248, 0.1);
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        border-radius: 12px;
+        padding: 0.75rem 1.25rem;
+      }
+    </style>
+
+    <div class="py-2">
+      
+      <!-- HERO SECTION WITH DYNAMIC PET SLIDESHOW -->
+      <div class="hero-slideshow-container mb-4">
+        <div class="slideshow-bg slide-1"></div>
+        <div class="slideshow-bg slide-2"></div>
+        <div class="slideshow-bg slide-3"></div>
+        <div class="slideshow-bg slide-4"></div>
+
+        <div class="hero-content">
+          <div class="row align-items-center">
+            <div class="col-lg-8">
+              <span class="badge bg-primary bg-opacity-25 text-info border border-info rounded-pill px-3 py-2 mb-3 fs-6">
+                <i class="fa fa-heartbeat text-danger me-2 fs-6"></i> Trusted Pet Health Portal
+              </span>
+              <h1 class="display-3 fw-bold text-white mb-3">
+                Next-Gen <span class="gradient-text">Veterinary Care</span> & Clinical Operations
+              </h1>
+              <p class="fs-4 text-light opacity-75 mb-4 col-lg-10">
+                Streamlining patient records, specialist consultations, and emergency treatments to ensure your pets live happier, healthier lives.
+              </p>
+              <div class="d-flex flex-wrap gap-3">
+                <a class="btn btn-primary btn-lg rounded-pill px-4 shadow-lg border-0" href="/owners/find" th:href="@{/owners/find}" style="background: linear-gradient(135deg, #0284c7, #2563eb);">
+                  <i class="fa fa-search me-2"></i> Find Pet Owner
+                </a>
+                <a class="btn btn-outline-light btn-lg rounded-pill px-4" href="/vets.html" th:href="@{/vets.html}">
+                  <i class="fa fa-user-md me-2"></i> View Specialists
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DYNAMIC LOCAL WEATHER CARD -->
+      <div class="glass-panel p-4 mb-4">
+        <div class="row align-items-center">
+          <div class="col-md-5 mb-3 mb-md-0">
+            <div class="d-flex align-items-center gap-2">
+              <h5 class="fw-bold text-white mb-0" id="wx-location-heading">
+                <i class="fa fa-map-marker-alt text-danger me-2"></i> Local Clinic Weather (<span id="wx-city-name">Detecting...</span>)
+              </h5>
+            </div>
+            <p class="text-light opacity-75 mb-0 small">Real-time conditions for outdoor pet care & appointments</p>
+          </div>
+          
+          <div class="col-md-7">
+            <div class="d-flex align-items-center justify-content-md-end gap-3 flex-wrap">
+              <!-- Location Selector Dropdown -->
+              <select id="city-select" class="form-select form-select-sm bg-dark text-light border-secondary style-select" style="width: auto;" onchange="fetchCityWeather(this.value)">
+                <option value="auto" selected>📍 Auto-Detect Location</option>
+                <option value="Edmonton">Edmonton, AB</option>
+                <option value="Calgary">Calgary, AB</option>
+                <option value="Vancouver">Vancouver, BC</option>
+                <option value="Toronto">Toronto, ON</option>
+                <option value="Montreal">Montreal, QC</option>
+                <option value="Ottawa">Ottawa, ON</option>
+                <option value="Halifax">Halifax, NS</option>
+              </select>
+
+              <div class="weather-badge d-flex align-items-center">
+                <i class="fa fa-temperature-high text-info fs-3 me-3"></i>
+                <div>
+                  <div class="fs-4 fw-bold text-white mb-0" id="wx-temp">--°C</div>
+                  <div class="small text-light opacity-75" id="wx-desc">Loading...</div>
+                </div>
+              </div>
+
+              <div class="weather-badge d-flex align-items-center">
+                <i class="fa fa-wind text-primary fs-3 me-3"></i>
+                <div>
+                  <div class="fs-6 fw-bold text-white mb-0" id="wx-wind">-- km/h</div>
+                  <div class="small text-light opacity-75">Wind Speed</div>
+                </div>
+              </div>
+
+              <div class="weather-badge d-flex align-items-center">
+                <i class="fa fa-tint text-success fs-3 me-3"></i>
+                <div>
+                  <div class="fs-6 fw-bold text-white mb-0" id="wx-humidity">--%</div>
+                  <div class="small text-light opacity-75">Humidity</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CLINICAL METRICS -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-3">
+          <div class="metric-card p-4 text-center">
+            <h2 class="fw-bold text-info mb-1">15,000+</h2>
+            <p class="text-light opacity-75 mb-0 fw-medium">Active Registered Pets</p>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="metric-card p-4 text-center">
+            <h2 class="fw-bold text-success mb-1">12+</h2>
+            <p class="text-light opacity-75 mb-0 fw-medium">Board Certified Vets</p>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="metric-card p-4 text-center">
+            <h2 class="fw-bold text-warning mb-1">24 / 7</h2>
+            <p class="text-light opacity-75 mb-0 fw-medium">Emergency Care Center</p>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="metric-card p-4 text-center">
+            <h2 class="fw-bold text-primary mb-1">98%</h2>
+            <p class="text-light opacity-75 mb-0 fw-medium">On-Time Appointments</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- FEATURE CARDS SECTION -->
+      <div class="row g-4 mb-4">
+        <div class="col-md-4">
+          <div class="glass-panel p-4 h-100">
+            <div class="d-inline-flex align-items-center justify-content-center bg-info bg-opacity-10 text-info rounded-circle mb-3" style="width: 60px; height: 60px;">
+              <i class="fa fa-address-card fs-3"></i>
+            </div>
+            <h3 class="fw-bold text-white mb-2">Electronic Health Records</h3>
+            <p class="text-light opacity-75 fs-6">
+              Instant retrieval of medical timelines, diagnostic scans, treatment notes, and owner contact details.
+            </p>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="glass-panel p-4 h-100">
+            <div class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success rounded-circle mb-3" style="width: 60px; height: 60px;">
+              <i class="fa fa-stethoscope fs-3"></i>
+            </div>
+            <h3 class="fw-bold text-white mb-2">Specialist Rostering</h3>
+            <p class="text-light opacity-75 fs-6">
+              Seamlessly browse active veterinarians, track specialties (dentistry, radiology, surgery), and assign care.
+            </p>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="glass-panel p-4 h-100">
+            <div class="d-inline-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-warning rounded-circle mb-3" style="width: 60px; height: 60px;">
+              <i class="fa fa-heartbeat fs-3"></i>
+            </div>
+            <h3 class="fw-bold text-white mb-2">Preventative & Surgical Care</h3>
+            <p class="text-light opacity-75 fs-6">
+              Comprehensive clinical management ranging from routine wellness checkups and vaccinations to complex surgeries.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- DYNAMIC GEOLOCATION & WEATHER SCRIPT -->
+    <script>
+      function fetchCityWeather(city) {
+        let queryTarget = city;
+        
+        if (city === 'auto') {
+          queryTarget = ''; // Empty path lets wttr.in automatically geolocate based on user IP
+        }
+
+        fetch(`https://wttr.in/${queryTarget}?format=j1`)
+          .then(response => response.json())
+          .then(data => {
+            const current = data.current_condition[0];
+            const area = data.nearest_area[0];
+            
+            const detectedCity = area.areaName[0].value;
+            const detectedRegion = area.region[0].value;
+
+            document.getElementById('wx-city-name').innerText = `${detectedCity}, ${detectedRegion}`;
+            document.getElementById('wx-temp').innerText = current.temp_C + '°C';
+            document.getElementById('wx-desc').innerText = current.weatherDesc[0].value;
+            document.getElementById('wx-wind').innerText = current.windspeedKmph + ' km/h';
+            document.getElementById('wx-humidity').innerText = current.humidity + '%';
+          })
+          .catch(err => {
+            console.log('Weather lookup error', err);
+            document.getElementById('wx-city-name').innerText = 'Local Area';
+          });
+      }
+
+      document.addEventListener("DOMContentLoaded", function() {
+        fetchCityWeather('auto');
+      });
+    </script>
+  </body>
+</html>
