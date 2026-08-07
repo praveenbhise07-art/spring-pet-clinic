@@ -66,3 +66,4 @@ echo "Maven Version: $(mvn -version | head -n 1)"
 echo "Azure CLI Version: $(az --version | head -n 1)"
 
 echo "=== SETUP COMPLETE ==="
+
