@@ -61,7 +61,13 @@ pipeline {
 
         stage('6. Login to Azure & ACR') {
             steps {
-                withCredentials([azureServicePrincipal('${AZURE_CRED_ID}')]) {
+                withCredentials([azureServicePrincipal(
+                    credentialsId: "${AZURE_CRED_ID}",
+                    subscriptionIdVariable: 'AZURE_SUBSCRIPTION_ID',
+                    clientIdVariable: 'AZURE_CLIENT_ID',
+                    clientSecretVariable: 'AZURE_CLIENT_SECRET',
+                    tenantIdVariable: 'AZURE_TENANT_ID'
+                )]) {
                     sh "az login --service-principal -u \$AZURE_CLIENT_ID -p \$AZURE_CLIENT_SECRET --tenant \$AZURE_TENANT_ID"
                     sh "az acr login --name ${ACR_NAME}"
                 }
@@ -78,7 +84,13 @@ pipeline {
         stage('8. Deploy to AKS via Helm') {
             steps {
                 dir('spring-petclinic') {
-                    withCredentials([azureServicePrincipal('${AZURE_CRED_ID}')]) {
+                    withCredentials([azureServicePrincipal(
+                        credentialsId: "${AZURE_CRED_ID}",
+                        subscriptionIdVariable: 'AZURE_SUBSCRIPTION_ID',
+                        clientIdVariable: 'AZURE_CLIENT_ID',
+                        clientSecretVariable: 'AZURE_CLIENT_SECRET',
+                        tenantIdVariable: 'AZURE_TENANT_ID'
+                    )]) {
                         sh "az aks get-credentials --resource-group ${RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing"
                         
                         sh """
