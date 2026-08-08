@@ -1,0 +1,103 @@
+pipeline {
+    agent any
+
+    tools {
+        maven 'maven-3'
+    }
+
+    environment {
+        // --- UPDATE THESE WITH YOUR AZURE RESOURCE NAMES ---
+        ACR_NAME         = 'apexshieldacrdev'                      // Your Azure Container Registry name
+        ACR_SERVER       = 'apexshieldacrdev.azurecr.io'           // Your ACR login server URL
+        IMAGE_NAME       = 'spring-petclinic'                      // Docker image name
+        IMAGE_TAG        = "${BUILD_NUMBER}"                       // Dynamic build tag
+        RESOURCE_GROUP   = 'rg-apexshield-dev'                     // Azure Resource Group
+        AKS_CLUSTER_NAME = 'aks-apexshield-dev'                    // Azure Kubernetes Service Cluster name
+        AZURE_CRED_ID    = 'azure-sp-credentials'                  // Jenkins credential ID created earlier
+        SONAR_SERVER_NAME= 'sonarqube-servers'                     // SonarQube server name configured in System
+    }
+
+    stages {
+        stage('1. Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/YOUR_GITHUB_USERNAME/spring-petclinic.git'
+            }
+        }
+
+        stage('2. Build & Test with Maven') {
+            steps {
+                sh 'mvn clean package -DskipTests=false'
+            }
+        }
+
+        stage('3. SonarQube Code Analysis') {
+            steps {
+                script {
+                    withSonarQubeEnv("${SONAR_SERVER_NAME}") {
+                        sh 'mvn sonar:sonar'
+                    }
+                }
+            }
+        }
+
+        stage('4. Docker Build') {
+            steps {
+                sh "docker build -t ${ACR_SERVER}/${IMAGE_NAME}:${IMAGE_TAG} ."
+                sh "docker tag ${ACR_SERVER}/${IMAGE_NAME}:${IMAGE_TAG} ${ACR_SERVER}/${IMAGE_NAME}:latest"
+            }
+        }
+
+        stage('5. Trivy Security Vulnerability Scan') {
+            steps {
+                sh "trivy image --severity HIGH,CRITICAL ${ACR_SERVER}/${IMAGE_NAME}:${IMAGE_TAG}"
+            }
+        }
+
+        stage('6. Login to Azure & ACR') {
+            steps {
+                withCredentials([azureServicePrincipal('${AZURE_CRED_ID}')]) {
+                    sh "az login --service-principal -u \$AZURE_CLIENT_ID -p \$AZURE_CLIENT_SECRET --tenant \$AZURE_TENANT_ID"
+                    sh "az acr login --name ${ACR_NAME}"
+                }
+            }
+        }
+
+        stage('7. Push Docker Image to ACR') {
+            steps {
+                sh "docker push ${ACR_SERVER}/${IMAGE_NAME}:${IMAGE_TAG}"
+                sh "docker push ${ACR_SERVER}/${IMAGE_NAME}:latest"
+            }
+        }
+
+        stage('8. Deploy to AKS via Helm') {
+            steps {
+                withCredentials([azureServicePrincipal('${AZURE_CRED_ID}')]) {
+                    // Fetch kubeconfig credentials for AKS
+                    sh "az aks get-credentials --resource-group ${RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing"
+                    
+                    // Run Helm Upgrade / Install
+                    sh """
+                        helm upgrade --install spring-petclinic ./helm \
+                          --namespace dev \
+                          --create-namespace \
+                          --set image.repository=${ACR_SERVER}/${IMAGE_NAME} \
+                          --set image.tag=${IMAGE_TAG}
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            // Clean up workspace after build
+            cleanWs()
+        }
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed. Check logs for details.'
+        }
+    }
+}
