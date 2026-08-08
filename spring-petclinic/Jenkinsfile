@@ -7,14 +7,14 @@ pipeline {
 
     environment {
         // --- AZURE & RESOURCE CONFIGURATION ---
-        ACR_NAME          = 'apexshieldacrdev'                      // Your Azure Container Registry name
-        ACR_SERVER        = 'apexshieldacrdev.azurecr.io'           // Your ACR login server URL
-        IMAGE_NAME        = 'spring-petclinic'                      // Docker image name
-        IMAGE_TAG         = "${BUILD_NUMBER}"                       // Dynamic build tag
-        RESOURCE_GROUP    = 'rg-apexshield-dev'                     // Azure Resource Group
-        AKS_CLUSTER_NAME  = 'aks-apexshield-dev'                    // Azure Kubernetes Service Cluster name
-        AZURE_CRED_ID     = 'azure-sp-credentials'                  // Jenkins Azure Credential ID
-        SONAR_SERVER_NAME = 'sonar-server'                         // SonarQube installation name in Jenkins
+        ACR_NAME          = 'apexshieldacrdev'                      
+        ACR_SERVER        = 'apexshieldacrdev.azurecr.io'           
+        IMAGE_NAME        = 'spring-petclinic'                      
+        IMAGE_TAG         = "${BUILD_NUMBER}"                       
+        RESOURCE_GROUP    = 'rg-apexshield-dev'                     
+        AKS_CLUSTER_NAME  = 'aks-apexshield-dev'                    
+        AZURE_CRED_ID     = 'azure-sp-credentials'                  
+        SONAR_SERVER_NAME = 'sonar-server'                         
     }
 
     stages {
@@ -26,15 +26,19 @@ pipeline {
 
         stage('2. Build & Test with Maven') {
             steps {
-                sh 'mvn clean package -DskipTests=false'
+                dir('spring-petclinic') {
+                    sh 'mvn clean package -DskipTests=false'
+                }
             }
         }
 
         stage('3. SonarQube Code Analysis') {
             steps {
-                script {
-                    withSonarQubeEnv("${SONAR_SERVER_NAME}") {
-                        sh 'mvn sonar:sonar'
+                dir('spring-petclinic') {
+                    script {
+                        withSonarQubeEnv("${SONAR_SERVER_NAME}") {
+                            sh 'mvn sonar:sonar'
+                        }
                     }
                 }
             }
@@ -42,8 +46,10 @@ pipeline {
 
         stage('4. Docker Build') {
             steps {
-                sh "docker build -t ${ACR_SERVER}/${IMAGE_NAME}:${IMAGE_TAG} ."
-                sh "docker tag ${ACR_SERVER}/${IMAGE_NAME}:${IMAGE_TAG} ${ACR_SERVER}/${IMAGE_NAME}:latest"
+                dir('spring-petclinic') {
+                    sh "docker build -t ${ACR_SERVER}/${IMAGE_NAME}:${IMAGE_TAG} ."
+                    sh "docker tag ${ACR_SERVER}/${IMAGE_NAME}:${IMAGE_TAG} ${ACR_SERVER}/${IMAGE_NAME}:latest"
+                }
             }
         }
 
@@ -71,18 +77,18 @@ pipeline {
 
         stage('8. Deploy to AKS via Helm') {
             steps {
-                withCredentials([azureServicePrincipal('${AZURE_CRED_ID}')]) {
-                    // Fetch kubeconfig credentials for AKS
-                    sh "az aks get-credentials --resource-group ${RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing"
-                    
-                    // Run Helm Upgrade / Install
-                    sh """
-                        helm upgrade --install spring-petclinic ./helm \
-                          --namespace dev \
-                          --create-namespace \
-                          --set image.repository=${ACR_SERVER}/${IMAGE_NAME} \
-                          --set image.tag=${IMAGE_TAG}
-                    """
+                dir('spring-petclinic') {
+                    withCredentials([azureServicePrincipal('${AZURE_CRED_ID}')]) {
+                        sh "az aks get-credentials --resource-group ${RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing"
+                        
+                        sh """
+                            helm upgrade --install spring-petclinic ./helm \
+                              --namespace dev \
+                              --create-namespace \
+                              --set image.repository=${ACR_SERVER}/${IMAGE_NAME} \
+                              --set image.tag=${IMAGE_TAG}
+                        """
+                    }
                 }
             }
         }
@@ -90,7 +96,7 @@ pipeline {
 
     post {
         always {
-            cleanWs() // Clean up workspace after build
+            cleanWs()
         }
         success {
             echo 'Pipeline completed successfully!'
