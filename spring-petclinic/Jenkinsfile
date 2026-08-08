@@ -6,21 +6,21 @@ pipeline {
     }
 
     environment {
-        // --- UPDATE THESE WITH YOUR AZURE RESOURCE NAMES ---
-        ACR_NAME         = 'apexshieldacrdev'                      // Your Azure Container Registry name
-        ACR_SERVER       = 'apexshieldacrdev.azurecr.io'           // Your ACR login server URL
-        IMAGE_NAME       = 'spring-petclinic'                      // Docker image name
-        IMAGE_TAG        = "${BUILD_NUMBER}"                       // Dynamic build tag
-        RESOURCE_GROUP   = 'rg-apexshield-dev'                     // Azure Resource Group
-        AKS_CLUSTER_NAME = 'aks-apexshield-dev'                    // Azure Kubernetes Service Cluster name
-        AZURE_CRED_ID    = 'azure-sp-credentials'                  // Jenkins credential ID created earlier
-        SONAR_SERVER_NAME= 'sonarqube-servers'                     // SonarQube server name configured in System
+        // --- AZURE & RESOURCE CONFIGURATION ---
+        ACR_NAME          = 'apexshieldacrdev'                      // Your Azure Container Registry name
+        ACR_SERVER        = 'apexshieldacrdev.azurecr.io'           // Your ACR login server URL
+        IMAGE_NAME        = 'spring-petclinic'                      // Docker image name
+        IMAGE_TAG         = "${BUILD_NUMBER}"                       // Dynamic build tag
+        RESOURCE_GROUP    = 'rg-apexshield-dev'                     // Azure Resource Group
+        AKS_CLUSTER_NAME  = 'aks-apexshield-dev'                    // Azure Kubernetes Service Cluster name
+        AZURE_CRED_ID     = 'azure-sp-credentials'                  // Jenkins Azure Credential ID
+        SONAR_SERVER_NAME = 'sonar-server'                         // SonarQube installation name in Jenkins
     }
 
     stages {
         stage('1. Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/YOUR_GITHUB_USERNAME/spring-petclinic.git'
+                git branch: 'main', url: 'https://github.com/praveenbhise07-art/spring-pet-clinic.git'
             }
         }
 
@@ -90,8 +90,7 @@ pipeline {
 
     post {
         always {
-            // Clean up workspace after build
-            cleanWs()
+            cleanWs() // Clean up workspace after build
         }
         success {
             echo 'Pipeline completed successfully!'
