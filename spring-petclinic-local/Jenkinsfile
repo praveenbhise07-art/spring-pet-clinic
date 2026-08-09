@@ -3,7 +3,7 @@ pipeline {
 
     tools {
         maven 'maven-3'
-        jdk 'jdk-21'
+        jdk 'jdk-17' // Aligned with Dockerfile runtime
     }
 
     environment {
@@ -20,7 +20,7 @@ pipeline {
 
         stage('Build & Test') {
             steps {
-                dir('spring-petclinic') {
+                dir('spring-petclinic-local') {
                     sh './mvnw clean package -DskipTests'
                 }
             }
@@ -35,7 +35,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh "docker build -t ${env.REGISTRY}/${env.IMAGE_NAME}:${BUILD_NUMBER} -t ${env.REGISTRY}/${env.IMAGE_NAME}:latest ./spring-petclinic"
+                    // FIX: Pointed build context to spring-petclinic-local
+                    sh "docker build -t ${env.REGISTRY}/${env.IMAGE_NAME}:${BUILD_NUMBER} -t ${env.REGISTRY}/${env.IMAGE_NAME}:latest ./spring-petclinic-local"
                 }
             }
         }
@@ -61,7 +62,8 @@ pipeline {
         stage('Deploy to AKS') {
             steps {
                 script {
-                    dir('spring-petclinic') {
+                    dir('spring-petclinic-local') {
+                        // Dynamically inject build number into Kubernetes manifest
                         sh "sed -i 's/BUILD_NUMBER/${BUILD_NUMBER}/g' k8s/petclinic.yml"
                         sh "kubectl apply -f k8s/petclinic.yml"
                     }
