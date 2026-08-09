@@ -3,79 +3,63 @@ pipeline {
 
     tools {
         maven 'maven-3'
-        jdk 'jdk-17' // Aligned with Dockerfile runtime
+        jdk 'jdk-21'
     }
 
     environment {
-        REGISTRY = 'apexshieldacrdev.azurecr.io'
+        ACR_NAME   = 'apexshieldacrdev.azurecr.io'
         IMAGE_NAME = 'spring-petclinic'
+        GIT_REPO   = 'https://github.com/praveenbhise07-art/spring-pet-clinic.git'
+        GIT_BRANCH = 'feature/v2.0-release'
     }
 
-    stage('Checkout') {
-    steps {
-        git branch: 'feature/v2.0-release', 
-            credentialsId: 'your-github-credentials-id', 
-            url: 'https://github.com/your-username/your-repo.git'
-    }
-}
+    stages {
+        stage('Checkout') {
+            steps {
+                // Force checkout of the V2 feature branch from your specific repo
+                git branch: "${env.GIT_BRANCH}", url: "${env.GIT_REPO}"
+            }
+        }
 
-        stage('Build & Test') {
+        stage('Build Application') {
             steps {
                 dir('spring-petclinic-local') {
+                    // 'clean' destroys old compiled JARs in target/ before packaging new HTML
                     sh './mvnw clean package -DskipTests'
                 }
             }
         }
 
-        stage('SonarQube Analysis') {
-            steps {
-                echo 'Running SonarQube Code Analysis...'
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
-                script {
-                    // FIX: Pointed build context to spring-petclinic-local
-                    sh "docker build -t ${env.REGISTRY}/${env.IMAGE_NAME}:${BUILD_NUMBER} -t ${env.REGISTRY}/${env.IMAGE_NAME}:latest ./spring-petclinic-local"
+                dir('spring-petclinic-local') {
+                    // '--no-cache' forces Docker to copy the newly generated JAR
+                    sh "docker build --no-cache -t ${env.ACR_NAME}/${env.IMAGE_NAME}:${BUILD_NUMBER} ."
+                    sh "docker tag ${env.ACR_NAME}/${env.IMAGE_NAME}:${BUILD_NUMBER} ${env.ACR_NAME}/${env.IMAGE_NAME}:latest"
                 }
-            }
-        }
-
-        stage('Trivy Security Scan') {
-            steps {
-                echo 'Running Trivy Vulnerability Scan...'
             }
         }
 
         stage('Push Image to ACR') {
             steps {
-                script {
-                    withCredentials([azureServicePrincipal('azure-sp-credentials')]) {
-                        sh "echo $AZURE_CLIENT_SECRET | docker login ${env.REGISTRY} -u $AZURE_CLIENT_ID --password-stdin"
-                        sh "docker push ${env.REGISTRY}/${env.IMAGE_NAME}:${BUILD_NUMBER}"
-                        sh "docker push ${env.REGISTRY}/${env.IMAGE_NAME}:latest"
-                    }
+                withCredentials([usernamePassword(credentialsId: 'azure-sp-credentials', usernameVariable: 'AZURE_CLIENT_ID', passwordVariable: 'AZURE_CLIENT_SECRET')]) {
+                    sh "echo \${AZURE_CLIENT_SECRET} | docker login ${env.ACR_NAME} -u \${AZURE_CLIENT_ID} --password-stdin"
+                    sh "docker push ${env.ACR_NAME}/${env.IMAGE_NAME}:${BUILD_NUMBER}"
+                    sh "docker push ${env.ACR_NAME}/${env.IMAGE_NAME}:latest"
                 }
             }
         }
 
         stage('Deploy to AKS') {
             steps {
-                script {
-                    dir('spring-petclinic-local') {
-                        // Dynamically inject build number into Kubernetes manifest
-                        sh "sed -i 's/BUILD_NUMBER/${BUILD_NUMBER}/g' k8s/petclinic.yml"
-                        sh "kubectl apply -f k8s/petclinic.yml"
-                    }
-                }
+                sh "kubectl set image deployment/petclinic petclinic=${env.ACR_NAME}/${env.IMAGE_NAME}:${BUILD_NUMBER}"
+                sh "kubectl rollout status deployment/petclinic"
             }
         }
     }
 
     post {
         always {
-            sh "docker logout ${env.REGISTRY} || true"
             cleanWs()
         }
     }
