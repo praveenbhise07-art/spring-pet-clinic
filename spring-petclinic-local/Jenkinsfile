@@ -23,7 +23,7 @@ pipeline {
         stage('Build Application') {
             steps {
                 dir('spring-petclinic-local') {
-                    // Forcefully delete the target folder to destroy old V1 JAR/HTML artifacts
+                    // Wipe local target directory to delete any old V1 JARs
                     sh 'rm -rf target/'
                     sh './mvnw clean package -DskipTests'
                 }
@@ -33,8 +33,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 dir('spring-petclinic-local') {
-                    // '--no-cache' forces Docker to copy the newly generated JAR
-                    sh "docker build --no-cache -t ${env.ACR_NAME}/${env.IMAGE_NAME}:${BUILD_NUMBER} ."
+                    // Build directly inside spring-petclinic-local to scope target/*.jar
+                    sh "docker build --no-cache -t ${env.ACR_NAME}/${env.IMAGE_NAME}:${BUILD_NUMBER} -f Dockerfile ."
                     sh "docker tag ${env.ACR_NAME}/${env.IMAGE_NAME}:${BUILD_NUMBER} ${env.ACR_NAME}/${env.IMAGE_NAME}:latest"
                 }
             }
@@ -52,7 +52,10 @@ pipeline {
 
         stage('Deploy to AKS') {
             steps {
+                // Set explicit build tag and force Kubernetes to restart pods with the new image
                 sh "kubectl set image deployment/petclinic petclinic=${env.ACR_NAME}/${env.IMAGE_NAME}:${BUILD_NUMBER}"
+                sh "kubectl patch deployment petclinic -p '{\"spec\":{\"template\":{\"spec\":{\"containers\":[{\"name\":\"petclinic\",\"imagePullPolicy\":\"Always\"}]}}}}'"
+                sh "kubectl rollout restart deployment/petclinic"
                 sh "kubectl rollout status deployment/petclinic"
             }
         }

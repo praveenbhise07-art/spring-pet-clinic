@@ -1,8 +1,7 @@
-FROM eclipse-temurin:17-jre-alpine
-
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-# Copy the pre-built jar from the target folder
+# Copy the freshly compiled JAR from spring-petclinic-local/target/
 COPY target/*.jar app.jar
 
 EXPOSE 8080
