@@ -16,7 +16,6 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                // Force checkout of the V2 feature branch from your specific repo
                 git branch: "${env.GIT_BRANCH}", url: "${env.GIT_REPO}"
             }
         }
@@ -24,7 +23,8 @@ pipeline {
         stage('Build Application') {
             steps {
                 dir('spring-petclinic-local') {
-                    // 'clean' destroys old compiled JARs in target/ before packaging new HTML
+                    // Forcefully delete the target folder to destroy old V1 JAR/HTML artifacts
+                    sh 'rm -rf target/'
                     sh './mvnw clean package -DskipTests'
                 }
             }
