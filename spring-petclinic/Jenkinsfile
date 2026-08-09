@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        // Update these variables with your Azure & ACR details
+        // --- UPDATE WITH YOUR AZURE & ACR DETAILS ---
         AZURE_SUBSCRIPTION_ID = 'YOUR_AZURE_SUBSCRIPTION_ID'
         REGISTRY_NAME         = 'youracrname.azurecr.io'
         IMAGE_NAME            = 'spring-petclinic'
@@ -21,6 +21,7 @@ pipeline {
         stage('Build & Test') {
             steps {
                 dir('spring-petclinic') {
+                    sh 'chmod +x mvnw'
                     sh './mvnw clean package'
                 }
             }
@@ -29,8 +30,8 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 dir('spring-petclinic') {
-                    // Requires SonarQube plugin/scanner configured in Jenkins
-                    sh './mvnw sonar:sonar'
+                    // Full plugin coordinate avoids prefix lookup errors
+                    sh './mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar'
                 }
             }
         }
@@ -46,14 +47,12 @@ pipeline {
 
         stage('Trivy Security Scan') {
             steps {
-                // Vulnerability scanning for the container image
                 sh "trivy image --severity HIGH,CRITICAL ${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG}"
             }
         }
 
         stage('Push Image to ACR') {
             steps {
-                // Using Azure CLI credentials configured in Jenkins
                 withCredentials([azureServicePrincipal('azure-sp-credentials')]) {
                     sh "az acr login --name ${REGISTRY_NAME.split('\\.')[0]}"
                     sh "docker push ${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG}"
@@ -65,7 +64,10 @@ pipeline {
         stage('Deploy to AKS') {
             steps {
                 withCredentials([azureServicePrincipal('azure-sp-credentials')]) {
+                    // 1. Get credentials for AKS cluster
                     sh "az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing"
+                    
+                    // 2. Apply standard Kubernetes manifests
                     dir('spring-petclinic/k8s') {
                         sh "kubectl apply -f deployment.yaml"
                         sh "kubectl set image deployment/spring-petclinic spring-petclinic=${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG}"
