@@ -1,0 +1,89 @@
+pipeline {
+    agent any
+
+    environment {
+        // Update these variables with your Azure & ACR details
+        AZURE_SUBSCRIPTION_ID = 'YOUR_AZURE_SUBSCRIPTION_ID'
+        REGISTRY_NAME         = 'youracrname.azurecr.io'
+        IMAGE_NAME            = 'spring-petclinic'
+        IMAGE_TAG             = "${BUILD_NUMBER}"
+        AKS_RESOURCE_GROUP    = 'your-resource-group'
+        AKS_CLUSTER_NAME      = 'your-aks-cluster'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build & Test') {
+            steps {
+                dir('spring-petclinic') {
+                    sh './mvnw clean package'
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                dir('spring-petclinic') {
+                    // Requires SonarQube plugin/scanner configured in Jenkins
+                    sh './mvnw sonar:sonar'
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir('spring-petclinic') {
+                    sh "docker build -t ${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG} ."
+                    sh "docker tag ${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY_NAME}/${IMAGE_NAME}:latest"
+                }
+            }
+        }
+
+        stage('Trivy Security Scan') {
+            steps {
+                // Vulnerability scanning for the container image
+                sh "trivy image --severity HIGH,CRITICAL ${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG}"
+            }
+        }
+
+        stage('Push Image to ACR') {
+            steps {
+                // Using Azure CLI credentials configured in Jenkins
+                withCredentials([azureServicePrincipal('azure-sp-credentials')]) {
+                    sh "az acr login --name ${REGISTRY_NAME.split('\\.')[0]}"
+                    sh "docker push ${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG}"
+                    sh "docker push ${REGISTRY_NAME}/${IMAGE_NAME}:latest"
+                }
+            }
+        }
+
+        stage('Deploy to AKS') {
+            steps {
+                withCredentials([azureServicePrincipal('azure-sp-credentials')]) {
+                    sh "az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing"
+                    dir('spring-petclinic/k8s') {
+                        sh "kubectl apply -f deployment.yaml"
+                        sh "kubectl set image deployment/spring-petclinic spring-petclinic=${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG}"
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            cleanWs()
+        }
+        success {
+            echo "Pipeline completed successfully! Deployed image tag ${IMAGE_TAG} to AKS."
+        }
+        failure {
+            echo "Pipeline failed. Check build logs."
+        }
+    }
+}
