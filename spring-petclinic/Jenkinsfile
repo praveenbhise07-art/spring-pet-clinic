@@ -2,14 +2,14 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven 3.9.6' // Ensure this matches your Jenkins tool name if using managed Maven
-        jdk 'JDK 17'        // Ensure this matches your Jenkins JDK tool configuration name
+        maven 'maven-3'
+        jdk 'jdk-21'
     }
 
     environment {
         REGISTRY = 'apexshieldacrdev.azurecr.io'
         IMAGE_NAME = 'spring-petclinic'
-        ACR_CREDENTIALS_ID = 'acr-credentials' // Your Jenkins credential ID for ACR
+        ACR_CREDENTIALS_ID = 'acr-credentials'
     }
 
     stages {
@@ -22,7 +22,6 @@ pipeline {
         stage('Build & Package') {
             steps {
                 dir('spring-petclinic') {
-                    // -DskipTests bypasses local Docker Compose integration tests in Jenkins
                     sh './mvnw clean package -DskipTests'
                 }
             }
@@ -43,7 +42,6 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    // Replaces BUILD_NUMBER placeholder in petclinic.yml with current build
                     sh "sed -i 's/BUILD_NUMBER/${BUILD_NUMBER}/g' k8s/petclinic.yml"
                     sh "kubectl apply -f k8s/petclinic.yml"
                 }
