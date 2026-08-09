@@ -1,89 +1,48 @@
-/* ==========================================================================
-   ENTERPRISE UI OVERRIDES (ApexShield Theme)
-   ========================================================================== */
+/* Enterprise Dashboard Styling Overrides */
+body {
+  background-color: #f8fafc;
+}
 
-/* Modernized Navbar */
 .navbar-default {
-  background-color: #1a1d20 !important;
-  border-color: #2b3035 !important;
+  background-color: #0f172a !important;
+  border-color: #1e293b !important;
   border-radius: 0;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.navbar-default .navbar-brand,
+.navbar-default .navbar-brand, 
 .navbar-default .navbar-nav > li > a {
-  color: #f8f9fa !important;
-  font-weight: 500;
-  transition: color 0.2s ease-in-out;
+  color: #f8fafc !important;
+  font-weight: 600;
 }
 
-.navbar-default .navbar-nav > li > a:hover,
-.navbar-default .navbar-nav > .active > a {
-  background-color: #0d6efd !important;
+.navbar-default .navbar-nav > .active > a,
+.navbar-default .navbar-nav > li > a:hover {
+  background-color: #2563eb !important;
   color: #ffffff !important;
-  border-radius: 4px;
 }
 
-/* Hero Section / Jumbotron */
-.jumbotron-enterprise {
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-  color: #ffffff;
-  padding: 40px 20px;
-  border-radius: 8px;
-  margin-bottom: 30px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.jumbotron-enterprise h1 {
-  font-weight: 700;
-  font-size: 32px;
-  margin-top: 10px;
-}
-
-.jumbotron-enterprise p {
-  color: #94a3b8;
-  font-size: 16px;
-}
-
-/* Metric / Operational Status Cards */
-.status-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
-  text-align: center;
-  transition: all 0.2s ease-in-out;
-}
-
-.status-card:hover {
-  transform: translateY(-3px);
+.jumbotron {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+  color: #ffffff !important;
+  border-radius: 12px !important;
+  padding: 40px 20px !important;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
-.status-card .status-label {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #64748b;
-  font-weight: 600;
-}
-
-.status-card .status-value {
-  font-size: 20px;
+.jumbotron h2 {
+  font-size: 32px;
   font-weight: 700;
-  margin: 8px 0;
+  color: #ffffff;
 }
 
-/* Buttons */
+.jumbotron p {
+  color: #94a3b8;
+}
+
 .btn-primary {
   background-color: #2563eb !important;
   border-color: #2563eb !important;
-  border-radius: 6px;
-  padding: 8px 20px;
   font-weight: 600;
-}
-
-.btn-primary:hover {
-  background-color: #1d4ed8 !important;
+  border-radius: 6px;
 }

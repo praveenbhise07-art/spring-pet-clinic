@@ -4,57 +4,20 @@
 
 <body>
 
-  <!-- Hero Banner -->
-  <div class="jumbotron-enterprise text-center">
-    <span class="label label-primary" style="font-size: 11px; letter-spacing: 0.5px;">ENTERPRISE CLOUD PLATFORM</span>
-    <h1>ApexShield Health Systems</h1>
-    <p>Production Kubernetes Workload • Spring Boot &amp; PostgreSQL Microservices</p>
-    <div style="margin-top: 25px;">
-      <a class="btn btn-primary btn-lg" th:href="@{/owners/find}">
-        <span class="fa fa-search"></span> Search Patient Records
-      </a>
-      <a class="btn btn-default btn-lg" th:href="@{/vets.html}" style="margin-left: 10px;">
-        <span class="fa fa-user-md"></span> On-Call Vets
-      </a>
-    </div>
+  <div class="jumbotron text-center">
+    <h2>ApexShield Health Systems</h2>
+    <p>Production Kubernetes Workload • Spring Boot &amp; PostgreSQL</p>
+    <br/>
+    <p>
+      <a class="btn btn-primary btn-lg" th:href="@{/owners/find}">Search Patients</a>
+      <a class="btn btn-default btn-lg" th:href="@{/vets.html}">On-Call Vets</a>
+    </p>
   </div>
 
-  <!-- Operational Status Dashboard -->
   <div class="row">
-    <div class="col-md-4">
-      <div class="status-card">
-        <div class="status-label">Cluster Gateway</div>
-        <div class="status-value text-success">
-          <span class="fa fa-check-circle"></span> NGINX Ingress
-        </div>
-        <small class="text-muted">Azure Load Balancer</small>
-      </div>
+    <div class="col-md-12 text-center">
+      <img class="img-responsive center-block" th:src="@{/resources/images/pets.png}" alt="Pets" style="max-height: 180px; border-radius: 8px;"/>
     </div>
-
-    <div class="col-md-4">
-      <div class="status-card">
-        <div class="status-label">Target Environment</div>
-        <div class="status-value text-primary">
-          <span class="fa fa-cubes"></span> AKS Dev
-        </div>
-        <small class="text-muted">East US Region</small>
-      </div>
-    </div>
-
-    <div class="col-md-4">
-      <div class="status-card">
-        <div class="status-label">Database Engine</div>
-        <div class="status-value text-info">
-          <span class="fa fa-database"></span> PostgreSQL
-        </div>
-        <small class="text-muted">Internal ClusterIP</small>
-      </div>
-    </div>
-  </div>
-
-  <!-- Hero Asset Image -->
-  <div class="text-center" style="margin-top: 10px;">
-    <img class="img-responsive center-block" th:src="@{/resources/images/pets.png}" alt="Pets" style="max-height: 180px; border-radius: 6px;"/>
   </div>
 
 </body>
