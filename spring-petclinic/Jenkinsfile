@@ -26,9 +26,11 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
-            steps {
-                // Full plugin coordinate avoids prefix lookup errors
-                sh './mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar'
+    steps {
+        // 'sonarqube-servers' matches the Name field in your Jenkins system settings screenshot
+        withSonarQubeEnv('sonarqube-servers') {
+            sh './mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar'
+        }
             }
         }
 
