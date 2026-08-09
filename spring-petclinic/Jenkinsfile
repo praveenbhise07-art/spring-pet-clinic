@@ -73,7 +73,7 @@ pipeline {
             }
         }
 
-       stage('Deploy to AKS') {
+        stage('Deploy to AKS') {
             steps {
                 withCredentials([azureServicePrincipal('azure-sp-credentials')]) {
                     sh '''
@@ -86,7 +86,7 @@ pipeline {
                         # 2. Connect to AKS
                         az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing
 
-                        # 3. Apply all Kubernetes manifests in spring-petclinic/k8s/
+                        # 3. Apply manifests in spring-petclinic/k8s/
                         kubectl apply -f spring-petclinic/k8s/
 
                         # 4. Update image tag on deployment
@@ -95,6 +95,7 @@ pipeline {
                 }
             }
         }
+    }
 
     post {
         always {
