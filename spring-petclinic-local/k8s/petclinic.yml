@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: petclinic
-          image: apexshieldacrdev.azurecr.io/spring-petclinic:BUILD_NUMBER
+          image: apexshieldacrdev.azurecr.io/spring-petclinic-local:BUILD_NUMBER
           ports:
             - containerPort: 8080
               name: http
