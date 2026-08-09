@@ -9,7 +9,6 @@ pipeline {
     environment {
         REGISTRY = 'apexshieldacrdev.azurecr.io'
         IMAGE_NAME = 'spring-petclinic'
-        ACR_CREDENTIALS = credentials('acr-credentials')
     }
 
     stages {
@@ -22,7 +21,7 @@ pipeline {
         stage('Build & Test') {
             steps {
                 dir('spring-petclinic') {
-                    // Skips docker-compose integration tests that fail inside Jenkins VM
+                    // Skips docker-compose integration tests inside the Jenkins VM
                     sh './mvnw clean package -DskipTests'
                 }
             }
@@ -31,14 +30,13 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 echo 'Running SonarQube Code Analysis...'
-                // Add your SonarQube scanner command here if configured
             }
         }
 
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh "docker build -t ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER} -t ${REGISTRY}/${IMAGE_NAME}:latest ./spring-petclinic"
+                    sh "docker build -t ${env.REGISTRY}/${env.IMAGE_NAME}:${BUILD_NUMBER} -t ${env.REGISTRY}/${env.IMAGE_NAME}:latest ./spring-petclinic"
                 }
             }
         }
@@ -46,16 +44,19 @@ pipeline {
         stage('Trivy Security Scan') {
             steps {
                 echo 'Running Trivy Vulnerability Scan...'
-                // sh "trivy image ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}"
             }
         }
 
         stage('Push Image to ACR') {
             steps {
                 script {
-                    sh "echo ${ACR_CREDENTIALS_PSW} | docker login ${REGISTRY} -u ${ACR_CREDENTIALS_USR} --password-stdin"
-                    sh "docker push ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}"
-                    sh "docker push ${REGISTRY}/${IMAGE_NAME}:latest"
+                    // Binds the Azure Service Principal credentials ('azure-sp-credentials')
+                    withCredentials([azureServicePrincipal('azure-sp-credentials')]) {
+                        // Log in to ACR using the bound Service Principal App ID and Secret
+                        sh "echo $AZURE_CLIENT_SECRET | docker login ${env.REGISTRY} -u $AZURE_CLIENT_ID --password-stdin"
+                        sh "docker push ${env.REGISTRY}/${env.IMAGE_NAME}:${BUILD_NUMBER}"
+                        sh "docker push ${env.REGISTRY}/${env.IMAGE_NAME}:latest"
+                    }
                 }
             }
         }
@@ -72,7 +73,7 @@ pipeline {
 
     post {
         always {
-            sh "docker logout ${REGISTRY} || true"
+            sh "docker logout ${env.REGISTRY} || true"
             cleanWs()
         }
     }
