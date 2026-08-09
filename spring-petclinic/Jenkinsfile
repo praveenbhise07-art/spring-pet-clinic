@@ -74,27 +74,23 @@ pipeline {
         }
 
         stage('Deploy to AKS') {
-            steps {
-                dir('spring-petclinic') {
-                    withCredentials([azureServicePrincipal('azure-sp-credentials')]) {
-                        sh '''
-                            # 1. Login to Azure CLI
-                            az login --service-principal \
-                              -u "$AZURE_CLIENT_ID" \
-                              -p "$AZURE_CLIENT_SECRET" \
-                              --tenant "$AZURE_TENANT_ID"
+    steps {
+        withCredentials([azureServicePrincipal('azure-sp-credentials')]) {
+            sh '''
+                # 1. Login to Azure CLI
+                az login --service-principal \
+                  -u "$AZURE_CLIENT_ID" \
+                  -p "$AZURE_CLIENT_SECRET" \
+                  --tenant "$AZURE_TENANT_ID"
 
-                            # 2. Connect to AKS and Deploy
-                            az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing
-                            kubectl apply -f k8s/deployment.yaml
-                            kubectl set image deployment/spring-petclinic spring-petclinic=${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG}
-                        '''
-                    }
-                }
-            }
+                # 2. Connect to AKS and Deploy
+                az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing
+                kubectl apply -f k8s/deployment.yaml
+                kubectl set image deployment/spring-petclinic spring-petclinic=${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG}
+            '''
         }
     }
-
+}
     post {
         always {
             cleanWs()
