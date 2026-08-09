@@ -2,13 +2,14 @@ pipeline {
     agent any
 
     environment {
-    AZURE_SUBSCRIPTION_ID = '8fbf56a2-fc1e-45d5-8dea-1adc237a62da'
-    REGISTRY_NAME         = 'apexshieldacrdev.azurecr.io'
-    IMAGE_NAME            = 'spring-petclinic'
-    IMAGE_TAG             = "${BUILD_NUMBER}"
-    AKS_RESOURCE_GROUP    = 'rg-apexshield-dev'
-    AKS_CLUSTER_NAME      = 'aks-apexshield-dev'
-}
+        // --- YOUR AZURE & ACR DETAILS ---
+        AZURE_SUBSCRIPTION_ID = '8fbf56a2-fc1e-45d5-8dea-1adc237a62da'
+        REGISTRY_NAME         = 'apexshieldacrdev.azurecr.io'
+        IMAGE_NAME            = 'spring-petclinic'
+        IMAGE_TAG             = "${BUILD_NUMBER}"
+        AKS_RESOURCE_GROUP    = 'rg-apexshield-dev'
+        AKS_CLUSTER_NAME      = 'aks-apexshield-dev'
+    }
 
     stages {
         stage('Checkout') {
@@ -54,9 +55,20 @@ pipeline {
         stage('Push Image to ACR') {
             steps {
                 withCredentials([azureServicePrincipal('azure-sp-credentials')]) {
-                    sh "az acr login --name ${REGISTRY_NAME.split('\\.')[0]}"
-                    sh "docker push ${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG}"
-                    sh "docker push ${REGISTRY_NAME}/${IMAGE_NAME}:latest"
+                    sh '''
+                        # 1. Login to Azure CLI using Service Principal credentials
+                        az login --service-principal \
+                          -u "$AZURE_CLIENT_ID" \
+                          -p "$AZURE_CLIENT_SECRET" \
+                          --tenant "$AZURE_TENANT_ID"
+
+                        # 2. Authenticate to Azure Container Registry
+                        az acr login --name apexshieldacrdev
+
+                        # 3. Push Docker Images
+                        docker push ${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG}
+                        docker push ${REGISTRY_NAME}/${IMAGE_NAME}:latest
+                    '''
                 }
             }
         }
@@ -65,9 +77,18 @@ pipeline {
             steps {
                 dir('spring-petclinic') {
                     withCredentials([azureServicePrincipal('azure-sp-credentials')]) {
-                        sh "az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing"
-                        sh "kubectl apply -f k8s/deployment.yaml"
-                        sh "kubectl set image deployment/spring-petclinic spring-petclinic=${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG}"
+                        sh '''
+                            # 1. Login to Azure CLI
+                            az login --service-principal \
+                              -u "$AZURE_CLIENT_ID" \
+                              -p "$AZURE_CLIENT_SECRET" \
+                              --tenant "$AZURE_TENANT_ID"
+
+                            # 2. Connect to AKS and Deploy
+                            az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing
+                            kubectl apply -f k8s/deployment.yaml
+                            kubectl set image deployment/spring-petclinic spring-petclinic=${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG}
+                        '''
                     }
                 }
             }
