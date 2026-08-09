@@ -11,12 +11,13 @@ pipeline {
         IMAGE_NAME = 'spring-petclinic'
     }
 
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
+    stage('Checkout') {
+    steps {
+        git branch: 'feature/v2.0-release', 
+            credentialsId: 'your-github-credentials-id', 
+            url: 'https://github.com/your-username/your-repo.git'
+    }
+}
 
         stage('Build & Test') {
             steps {
