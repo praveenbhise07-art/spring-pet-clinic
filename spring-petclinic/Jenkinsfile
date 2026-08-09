@@ -20,24 +20,29 @@ pipeline {
 
         stage('Build & Test') {
             steps {
-                sh 'chmod +x mvnw'
-                sh './mvnw clean package'
+                dir('spring-petclinic') {
+                    sh 'chmod +x mvnw'
+                    sh './mvnw clean package'
+                }
             }
         }
 
         stage('SonarQube Analysis') {
-    steps {
-        // 'sonarqube-servers' matches the Name field in your Jenkins system settings screenshot
-        withSonarQubeEnv('sonarqube-servers') {
-            sh './mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar'
-        }
+            steps {
+                dir('spring-petclinic') {
+                    withSonarQubeEnv('sonarqube-servers') {
+                        sh './mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:sonar'
+                    }
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG} ."
-                sh "docker tag ${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY_NAME}/${IMAGE_NAME}:latest"
+                dir('spring-petclinic') {
+                    sh "docker build -t ${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG} ."
+                    sh "docker tag ${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG} ${REGISTRY_NAME}/${IMAGE_NAME}:latest"
+                }
             }
         }
 
@@ -59,11 +64,12 @@ pipeline {
 
         stage('Deploy to AKS') {
             steps {
-                withCredentials([azureServicePrincipal('azure-sp-credentials')]) {
-                    sh "az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing"
-                    // Assuming k8s folder sits in the root alongside Jenkinsfile
-                    sh "kubectl apply -f k8s/deployment.yaml"
-                    sh "kubectl set image deployment/spring-petclinic spring-petclinic=${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG}"
+                dir('spring-petclinic') {
+                    withCredentials([azureServicePrincipal('azure-sp-credentials')]) {
+                        sh "az aks get-credentials --resource-group ${AKS_RESOURCE_GROUP} --name ${AKS_CLUSTER_NAME} --overwrite-existing"
+                        sh "kubectl apply -f k8s/deployment.yaml"
+                        sh "kubectl set image deployment/spring-petclinic spring-petclinic=${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG}"
+                    }
                 }
             }
         }
