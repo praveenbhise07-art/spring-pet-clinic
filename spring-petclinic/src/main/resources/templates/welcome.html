@@ -4,67 +4,65 @@
 
 <body>
 
-  <!-- Modern Hero Section -->
-  <div class="p-5 mb-4 bg-dark text-white rounded-3 shadow-sm border border-secondary">
-    <div class="container-fluid py-3 text-center">
-      <span class="badge bg-primary mb-2 px-3 py-2 text-uppercase fs-6">Enterprise Cloud Platform</span>
-      <h1 class="display-4 fw-bold">ApexShield Health Systems</h1>
-      <p class="col-md-8 fs-5 mx-auto text-light opacity-75">
-        Production Kubernetes Workload • Spring Boot & PostgreSQL Microservices
-      </p>
-      <div class="d-flex justify-content-center gap-3 mt-4">
-        <a class="btn btn-primary btn-lg shadow-sm" th:href="@{/owners/find}" role="button">
-          <i class="fa fa-search me-1"></i> Search Patients
-        </a>
-        <a class="btn btn-outline-light btn-lg shadow-sm" th:href="@{/vets.html}" role="button">
-          <i class="fa fa-user-md me-1"></i> On-Call Vets
-        </a>
+  <!-- Enterprise Hero Section -->
+  <div class="jumbotron text-center" style="background-color: #212529; color: #ffffff; padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
+    <span class="label label-primary" style="font-size: 12px; padding: 6px 12px; text-transform: uppercase;">Enterprise Cloud Platform</span>
+    <h1 style="margin-top: 15px; font-weight: bold;">ApexShield Health Systems</h1>
+    <p class="lead" style="color: #cccccc;">
+      Production Kubernetes Workload • Spring Boot &amp; PostgreSQL Microservices
+    </p>
+    <div style="margin-top: 20px;">
+      <a class="btn btn-primary btn-lg" th:href="@{/owners/find}">
+        <span class="fa fa-search"></span> Search Patients
+      </a>
+      <a class="btn btn-default btn-lg" th:href="@{/vets.html}" style="margin-left: 10px;">
+        <span class="fa fa-user-md"></span> On-Call Vets
+      </a>
+    </div>
+  </div>
+
+  <!-- Operational Status Dashboard Cards -->
+  <div class="row" style="margin-bottom: 2rem;">
+    <div class="col-md-4">
+      <div class="panel panel-default text-center" style="border: 1px solid #e3e3e3; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <div class="panel-body">
+          <small class="text-muted" style="text-transform: uppercase; font-weight: bold;">Cluster Gateway</small>
+          <h3 class="text-success" style="margin-top: 5px;">
+            <span class="fa fa-check-circle"></span> NGINX Ingress
+          </h3>
+          <small class="text-muted">Azure LB Connected</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="panel panel-default text-center" style="border: 1px solid #e3e3e3; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <div class="panel-body">
+          <small class="text-muted" style="text-transform: uppercase; font-weight: bold;">Target Cluster</small>
+          <h3 class="text-primary" style="margin-top: 5px;">
+            <span class="fa fa-cubes"></span> AKS Dev
+          </h3>
+          <small class="text-muted">East US Region</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="panel panel-default text-center" style="border: 1px solid #e3e3e3; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <div class="panel-body">
+          <small class="text-muted" style="text-transform: uppercase; font-weight: bold;">Database Engine</small>
+          <h3 class="text-info" style="margin-top: 5px;">
+            <span class="fa fa-database"></span> PostgreSQL
+          </h3>
+          <small class="text-muted">Internal ClusterIP</small>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Operational Status Dashboard -->
-  <div class="row g-4 mb-4">
-    <div class="col-md-4">
-      <div class="card h-100 border-0 shadow-sm text-center p-3">
-        <div class="card-body">
-          <div class="text-uppercase text-muted fw-bold small mb-2">Cluster Gateway</div>
-          <h4 class="text-success fw-bold mb-0">
-            <i class="fa fa-check-circle me-1"></i> NGINX Ingress
-          </h4>
-          <small class="text-secondary">Azure LB Connected</small>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-4">
-      <div class="card h-100 border-0 shadow-sm text-center p-3">
-        <div class="card-body">
-          <div class="text-uppercase text-muted fw-bold small mb-2">Target Cluster</div>
-          <h4 class="text-primary fw-bold mb-0">
-            <i class="fa fa-cubes me-1"></i> AKS Dev
-          </h4>
-          <small class="text-secondary">East US Region</small>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-md-4">
-      <div class="card h-100 border-0 shadow-sm text-center p-3">
-        <div class="card-body">
-          <div class="text-uppercase text-muted fw-bold small mb-2">Database Engine</div>
-          <h4 class="text-info fw-bold mb-0">
-            <i class="fa fa-database me-1"></i> PostgreSQL
-          </h4>
-          <small class="text-secondary">Internal ClusterIP</small>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Petclinic Banner Image Container -->
-  <div class="text-center mt-4">
-    <img class="img-fluid rounded-3 shadow-sm border" th:src="@{/resources/images/pets.png}" alt="Pets" style="max-height: 220px;"/>
+  <!-- Pet Banner Image -->
+  <div class="text-center">
+    <img class="img-responsive center-block" th:src="@{/resources/images/pets.png}" alt="Pets" style="max-height: 180px; border-radius: 6px;"/>
   </div>
 
 </body>
