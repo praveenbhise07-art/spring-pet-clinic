@@ -89,8 +89,8 @@ pipeline {
                         # 3. Apply all manifests inside spring-petclinic/k8s/
                         kubectl apply -f spring-petclinic/k8s/
 
-                        # 4. Update image tag on the deployment (targeting 'petclinic')
-                        kubectl set image deployment/petclinic spring-petclinic=${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG}
+                        # 4. Update image tag on deployment/petclinic container/petclinic
+                        kubectl set image deployment/petclinic petclinic=${REGISTRY_NAME}/${IMAGE_NAME}:${IMAGE_TAG}
                     '''
                 }
             }
