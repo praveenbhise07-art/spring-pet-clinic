@@ -2,14 +2,13 @@ pipeline {
     agent any
 
     environment {
-        // --- UPDATE THESE VARIABLES FOR YOUR AZURE & ACR SETUP ---
-        AZURE_SUBSCRIPTION_ID = 'YOUR_AZURE_SUBSCRIPTION_ID'
-        REGISTRY_NAME         = 'youracrname.azurecr.io'
-        IMAGE_NAME            = 'spring-petclinic'
-        IMAGE_TAG             = "${BUILD_NUMBER}"
-        AKS_RESOURCE_GROUP    = 'your-resource-group'
-        AKS_CLUSTER_NAME      = 'your-aks-cluster'
-    }
+    AZURE_SUBSCRIPTION_ID = '8fbf56a2-fc1e-45d5-8dea-1adc237a62da'
+    REGISTRY_NAME         = 'apexshieldacrdev.azurecr.io'
+    IMAGE_NAME            = 'spring-petclinic'
+    IMAGE_TAG             = "${BUILD_NUMBER}"
+    AKS_RESOURCE_GROUP    = 'rg-apexshield-dev'
+    AKS_CLUSTER_NAME      = 'aks-apexshield-dev'
+}
 
     stages {
         stage('Checkout') {
