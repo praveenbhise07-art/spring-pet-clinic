@@ -23,7 +23,7 @@ pipeline {
         stage('Build Application') {
             steps {
                 dir('spring-petclinic-local') {
-                    // Wipe local target directory to delete any old V1 JARs
+                    // Delete old build outputs before compiling
                     sh 'rm -rf target/'
                     sh './mvnw clean package -DskipTests'
                 }
@@ -33,9 +33,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 dir('spring-petclinic-local') {
-                    // Build directly inside spring-petclinic-local to scope target/*.jar
-                    sh "docker build --no-cache -t ${env.ACR_NAME}/${env.IMAGE_NAME}:${BUILD_NUMBER} -f Dockerfile ."
-                    sh "docker tag ${env.ACR_NAME}/${env.IMAGE_NAME}:${BUILD_NUMBER} ${env.ACR_NAME}/${env.IMAGE_NAME}:latest"
+                    // Tag build number and latest simultaneously using spring-petclinic-local context
+                    sh "docker build --no-cache -t ${env.ACR_NAME}/${env.IMAGE_NAME}:${BUILD_NUMBER} -t ${env.ACR_NAME}/${env.IMAGE_NAME}:latest -f Dockerfile ."
                 }
             }
         }
