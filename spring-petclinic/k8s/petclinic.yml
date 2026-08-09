@@ -48,10 +48,16 @@ spec:
             httpGet:
               path: /livez
               port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
           readinessProbe:
             httpGet:
               path: /readyz
               port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 3
           volumeMounts:
             - mountPath: /bindings/secret
               name: binding
