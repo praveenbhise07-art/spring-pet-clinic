@@ -23,8 +23,8 @@ pipeline {
         stage('Build Application') {
             steps {
                 dir('spring-petclinic-local') {
-                    // Delete old build outputs before compiling
                     sh 'rm -rf target/'
+                    sh 'chmod +x mvnw'
                     sh './mvnw clean package -DskipTests'
                 }
             }
@@ -33,7 +33,6 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 dir('spring-petclinic-local') {
-                    // Tag build number and latest simultaneously using spring-petclinic-local context
                     sh "docker build --no-cache -t ${env.ACR_NAME}/${env.IMAGE_NAME}:${BUILD_NUMBER} -t ${env.ACR_NAME}/${env.IMAGE_NAME}:latest -f Dockerfile ."
                 }
             }
@@ -41,7 +40,7 @@ pipeline {
 
         stage('Push Image to ACR') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'azure-sp-credentials', usernameVariable: 'AZURE_CLIENT_ID', passwordVariable: 'AZURE_CLIENT_SECRET')]) {
+                withCredentials([azureServicePrincipal('azure-sp-credentials')]) {
                     sh "echo \${AZURE_CLIENT_SECRET} | docker login ${env.ACR_NAME} -u \${AZURE_CLIENT_ID} --password-stdin"
                     sh "docker push ${env.ACR_NAME}/${env.IMAGE_NAME}:${BUILD_NUMBER}"
                     sh "docker push ${env.ACR_NAME}/${env.IMAGE_NAME}:latest"
@@ -51,7 +50,6 @@ pipeline {
 
         stage('Deploy to AKS') {
             steps {
-                // Set explicit build tag and force Kubernetes to restart pods with the new image
                 sh "kubectl set image deployment/petclinic petclinic=${env.ACR_NAME}/${env.IMAGE_NAME}:${BUILD_NUMBER}"
                 sh "kubectl patch deployment petclinic -p '{\"spec\":{\"template\":{\"spec\":{\"containers\":[{\"name\":\"petclinic\",\"imagePullPolicy\":\"Always\"}]}}}}'"
                 sh "kubectl rollout restart deployment/petclinic"
