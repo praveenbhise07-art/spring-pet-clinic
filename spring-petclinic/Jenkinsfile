@@ -9,7 +9,7 @@ pipeline {
     environment {
         REGISTRY = 'apexshieldacrdev.azurecr.io'
         IMAGE_NAME = 'spring-petclinic'
-        ACR_CREDENTIALS_ID = 'acr-credentials'
+        ACR_CREDENTIALS = credentials('acr-credentials') // Pulls username and password from Jenkins store
     }
 
     stages {
@@ -30,11 +30,15 @@ pipeline {
         stage('Docker Build & Push') {
             steps {
                 script {
-                    docker.withRegistry("https://${REGISTRY}", "${ACR_CREDENTIALS_ID}") {
-                        def customImage = docker.build("${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}", "./spring-petclinic")
-                        customImage.push()
-                        customImage.push("latest")
-                    }
+                    // Login to ACR using standard docker CLI
+                    sh "echo ${ACR_CREDENTIALS_PSW} | docker login ${REGISTRY} -u ${ACR_CREDENTIALS_USR} --password-stdin"
+                    
+                    // Build image using pre-built target jar
+                    sh "docker build -t ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER} -t ${REGISTRY}/${IMAGE_NAME}:latest ./spring-petclinic"
+                    
+                    // Push images
+                    sh "docker push ${REGISTRY}/${IMAGE_NAME}:${BUILD_NUMBER}"
+                    sh "docker push ${REGISTRY}/${IMAGE_NAME}:latest"
                 }
             }
         }
@@ -51,6 +55,8 @@ pipeline {
 
     post {
         always {
+            // Logout of ACR for security
+            sh "docker logout ${REGISTRY} || true"
             cleanWs()
         }
     }
