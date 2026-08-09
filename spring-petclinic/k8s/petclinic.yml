@@ -1,17 +1,3 @@
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: petclinic
-spec:
-  type: NodePort
-  ports:
-    - port: 80
-      targetPort: 8080
-  selector:
-    app: petclinic
-
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,41 +16,68 @@ spec:
     spec:
       containers:
         - name: petclinic
-          image: dsyer/petclinic
+          image: apexshieldacrdev.azurecr.io/spring-petclinic:BUILD_NUMBER
+          ports:
+            - containerPort: 8080
+              name: http
           env:
             - name: SPRING_PROFILES_ACTIVE
-              value: postgres
+              value: "postgres"
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://demo-db:5432/petclinic"
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: demo-db
+                  key: username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: demo-db
+                  key: password
             - name: SERVICE_BINDING_ROOT
-              value: /bindings
+              value: "/bindings"
             - name: SPRING_APPLICATION_JSON
-              value: |
-                {
-                  "management.endpoint.health.probes.add-additional-paths": true
-                }
-          ports:
-            - name: http
-              containerPort: 8080
+              value: '{"management.endpoint.health.probes.add-additional-paths": true}'
+          volumeMounts:
+            - name: binding
+              mountPath: /bindings/secret
+              readOnly: true
           livenessProbe:
             httpGet:
               path: /livez
-              port: http
+              port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 3
+            failureThreshold: 3
           readinessProbe:
             httpGet:
               path: /readyz
-              port: http
+              port: 8080
             initialDelaySeconds: 20
             periodSeconds: 10
             timeoutSeconds: 3
-          volumeMounts:
-            - mountPath: /bindings/secret
-              name: binding
-              readOnly: true
+            failureThreshold: 3
       volumes:
         - name: binding
           projected:
             sources:
               - secret:
                   name: demo-db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: petclinic
+  labels:
+    app: petclinic
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    app: petclinic
