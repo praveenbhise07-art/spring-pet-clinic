@@ -1,0 +1,79 @@
+pipeline {
+    agent any
+
+    tools {
+        maven 'maven-3'
+        jdk 'jdk-21'
+    }
+
+    environment {
+        REGISTRY = 'apexshieldacrdev.azurecr.io'
+        IMAGE_NAME = 'spring-petclinic'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build & Test') {
+            steps {
+                dir('spring-petclinic') {
+                    sh './mvnw clean package -DskipTests'
+                }
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                echo 'Running SonarQube Code Analysis...'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    sh "docker build -t ${env.REGISTRY}/${env.IMAGE_NAME}:${BUILD_NUMBER} -t ${env.REGISTRY}/${env.IMAGE_NAME}:latest ./spring-petclinic"
+                }
+            }
+        }
+
+        stage('Trivy Security Scan') {
+            steps {
+                echo 'Running Trivy Vulnerability Scan...'
+            }
+        }
+
+        stage('Push Image to ACR') {
+            steps {
+                script {
+                    withCredentials([azureServicePrincipal('azure-sp-credentials')]) {
+                        sh "echo $AZURE_CLIENT_SECRET | docker login ${env.REGISTRY} -u $AZURE_CLIENT_ID --password-stdin"
+                        sh "docker push ${env.REGISTRY}/${env.IMAGE_NAME}:${BUILD_NUMBER}"
+                        sh "docker push ${env.REGISTRY}/${env.IMAGE_NAME}:latest"
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to AKS') {
+            steps {
+                script {
+                    dir('spring-petclinic') {
+                        sh "sed -i 's/BUILD_NUMBER/${BUILD_NUMBER}/g' k8s/petclinic.yml"
+                        sh "kubectl apply -f k8s/petclinic.yml"
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            sh "docker logout ${env.REGISTRY} || true"
+            cleanWs()
+        }
+    }
+}

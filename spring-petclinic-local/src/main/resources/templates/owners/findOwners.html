@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: html(~{::mainContent}, 'Find Owners - PetClinic')}">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Find Owners</title>
+</head>
+<body>
+
+    <div th:fragment="mainContent">
+
+        <h2 class="fw-bold mb-4">Find Owners</h2>
+
+        <form th:object="${owner}" th:action="@{/owners}" method="get" class="card p-4 shadow-sm border-0 mb-4" id="search-owner-form">
+            <div class="row mb-3 align-items-center">
+                <label class="col-sm-2 col-form-label fw-semibold">Last name</label>
+                <div class="col-sm-8">
+                    <input class="form-control" th:field="*{lastName}" size="30" maxlength="80" placeholder="Enter last name to search..." />
+                    <span class="text-danger" th:if="${#fields.hasErrors('lastName')}">
+                        <p th:errors="*{lastName}">Error</p>
+                    </span>
+                </div>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary fw-semibold px-4">Find Owner</button>
+                <a class="btn btn-outline-success fw-semibold" th:href="@{/owners/new}">Add Owner</a>
+            </div>
+        </form>
+
+    </div>
+
+</body>
+</html>

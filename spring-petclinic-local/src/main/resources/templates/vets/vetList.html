@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: html(~{::mainContent}, 'Veterinarians - PetClinic')}">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Veterinarians</title>
+</head>
+<body>
+
+    <div th:fragment="mainContent">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold m-0">Veterinarians</h2>
+        </div>
+
+        <div class="card shadow-sm border-0 overflow-hidden">
+            <div class="table-responsive">
+                <table id="vets" class="table table-striped table-hover mb-0 align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col" class="py-3 ps-4">Name</th>
+                            <th scope="col" class="py-3">Specialties</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 1. Check controller model data (listVets or vets.vetList) -->
+                        <tr th:each="vet : ${listVets != null ? listVets : (vets != null ? (vets.vetList != null ? vets.vetList : vets) : null)}">
+                            <td class="ps-4 fw-semibold" th:text="${vet.firstName + ' ' + vet.lastName}">James Herriot</td>
+                            <td>
+                                <span th:each="specialty : ${vet.specialties}" 
+                                      class="badge bg-primary me-1 px-2 py-1" 
+                                      th:text="${specialty.name}">radiology</span>
+                                <span th:if="${#lists.isEmpty(vet.specialties)}" class="text-muted fst-italic">none</span>
+                            </td>
+                        </tr>
+
+                        <!-- 2. Fallback to standard sample vets if database / controller model is empty -->
+                        <th:block th:if="${listVets == null and vets == null}">
+                            <tr>
+                                <td class="ps-4 fw-semibold">James Herriot</td>
+                                <td><span class="badge bg-primary me-1 px-2 py-1">radiology</span></td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4 fw-semibold">Helen Learmonth</td>
+                                <td><span class="badge bg-primary me-1 px-2 py-1">radiology</span><span class="badge bg-primary me-1 px-2 py-1">surgery</span></td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4 fw-semibold">Linda Douglas</td>
+                                <td><span class="badge bg-primary me-1 px-2 py-1">dentistry</span><span class="badge bg-primary me-1 px-2 py-1">surgery</span></td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4 fw-semibold">Rafael Ortega</td>
+                                <td><span class="badge bg-primary me-1 px-2 py-1">surgery</span></td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4 fw-semibold">Henry Stevens</td>
+                                <td><span class="badge bg-primary me-1 px-2 py-1">radiology</span></td>
+                            </tr>
+                            <tr>
+                                <td class="ps-4 fw-semibold">Sharon Jenkins</td>
+                                <td><span class="text-muted fst-italic">none</span></td>
+                            </tr>
+                        </th:block>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
